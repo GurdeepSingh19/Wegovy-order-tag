@@ -4,8 +4,8 @@ import axios from 'axios';
 const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const SHOPIFY_SHOP = process.env.SHOPIFY_SHOP;
 const SHOPIFY_SHARED_SECRET = process.env.SHOPIFY_SHARED_SECRET;
-const PRODUCT_SKU_TO_CHECK = 'MY-SKU-123';
-const TAG_TO_ADD = 'Product-Tagged';
+const PRODUCT_SKU_TO_CHECK = '9000000';
+const TAG_TO_ADD = 'prescription-required';
 const DELAY_MINUTES = 5;
 
 function verifyShopifyWebhook(req) {
