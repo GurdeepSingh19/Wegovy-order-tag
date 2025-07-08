@@ -18,6 +18,13 @@ function verifyShopifyWebhook(req) {
 }
 
 export default async function ordersCreateHandler(req, res) {
+
+  console.log('✅ Webhook received:', {
+  id: req.headers['x-shopify-order-id'],
+  time: req.headers['x-shopify-topic'],
+  body: req.body
+});
+  
   if (!verifyShopifyWebhook(req)) {
     console.warn('Webhook signature verification failed.');
     return res.status(401).send('Unauthorized');
