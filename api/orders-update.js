@@ -1,5 +1,5 @@
-﻿import crypto from 'crypto';
-import axios from 'axios';
+﻿const crypto = require('crypto');
+const axios = require('axios');
 
 const PRODUCT_SKU_TO_CHECK = '9000000';
 const TAG_TO_ADD = 'prescription-required';
@@ -33,10 +33,10 @@ async function addTagIfNeeded(order, shop, accessToken) {
     });
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
-    const body = await readBody(req); // custom raw reader
+    const body = await readBody(req);
     const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
 
     if (!verifyHmac(req, body, SHOPIFY_SHARED_SECRET)) {
@@ -51,8 +51,7 @@ export default async function handler(req, res) {
     res.status(200).send('OK');
 }
 
-// Reads raw body
-async function readBody(req) {
+function readBody(req) {
     return new Promise((resolve, reject) => {
         let data = '';
         req.on('data', chunk => data += chunk);
