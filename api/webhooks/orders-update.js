@@ -1,10 +1,9 @@
-
 import crypto from 'crypto';
 import axios from 'axios';
 
 const PRODUCT_SKU_TO_CHECK = '9000000';
 const TAG_TO_ADD = 'prescription-required';
-const DELAY_MINUTES_ON_CREATE = 10;
+const DELAY_MINUTES_ON_CREATE = 0;
 
 function verifyHmac(req, body, secret) {
   const hmacHeader = req.headers['x-shopify-hmac-sha256'];
