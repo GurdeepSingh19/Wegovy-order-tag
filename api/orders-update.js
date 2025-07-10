@@ -34,6 +34,8 @@ async function addTagIfNeeded(order, shop, accessToken) {
 }
 
 export default async function handler(req, res) {
+    console.log('Webhook received');
+
     if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
     let body = '';
@@ -50,7 +52,9 @@ export default async function handler(req, res) {
 
     const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
 
-    if (!verifyHmac(req, body, SHOPIFY_SHARED_SECRET)) {
+    if (process.env.SKIP_HMAC_CHECK === 'true') {
+        console.log('⚠️ Skipping HMAC check for testing');
+    } else if (!verifyHmac(req, body, SHOPIFY_SHARED_SECRET)) {
         return res.status(401).send('Unauthorized');
     }
 
