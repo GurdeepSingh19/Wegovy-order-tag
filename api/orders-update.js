@@ -11,15 +11,6 @@ function verifyHmac(req, body, secret) {
     return crypto.timingSafeEqual(Buffer.from(hmacHeader || '', 'base64'), Buffer.from(hash));
 }
 
-function readBody(req) {
-    return new Promise((resolve, reject) => {
-        let data = '';
-        req.on('data', chunk => data += chunk);
-        req.on('end', () => resolve(data));
-        req.on('error', reject);
-    });
-}
-
 async function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -42,18 +33,28 @@ async function addTagIfNeeded(order, shop, accessToken) {
     });
 }
 
-async function handler(req, res) {
+export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
-    const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
+    let body = '';
+    try {
+        body = await new Promise((resolve, reject) => {
+            let data = '';
+            req.on('data', chunk => data += chunk);
+            req.on('end', () => resolve(data));
+            req.on('error', reject);
+        });
+    } catch (e) {
+        return res.status(400).send('Invalid body');
+    }
 
-    const body = JSON.stringify(req.body);
+    const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
 
     if (!verifyHmac(req, body, SHOPIFY_SHARED_SECRET)) {
         return res.status(401).send('Unauthorized');
     }
 
-    const order = req.body;
+    const order = JSON.parse(body);
     console.log(`✅ Verified webhook: Order ID ${order.id}`);
 
     await delay(DELAY_MINUTES_ON_CREATE * 60 * 1000);
@@ -61,5 +62,3 @@ async function handler(req, res) {
 
     res.status(200).send('OK');
 }
-
-module.exports = { handler };
