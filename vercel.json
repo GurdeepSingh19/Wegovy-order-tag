@@ -1,0 +1,14 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "api/**/*.js",
+            "use": "@vercel/node"
+        }
+    ],
+    "env": {
+        "SHOPIFY_SHARED_SECRET": "9471fd1ebdec51ebb9d41ec68713d954863e2a6a0bb363ad6fb1f356438ed93d",
+        "SHOPIFY_ACCESS_TOKEN": "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",
+        "SHOPIFY_SHOP": "bargain-chemist-staging-store.myshopify.com"
+    }
+}
