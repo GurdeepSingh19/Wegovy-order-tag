@@ -1,1 +1,4 @@
 .vs/
+.env
+node_modules/
+.vercel/
