@@ -42,7 +42,7 @@ async function addTagIfNeeded(order, shop, accessToken) {
     });
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
     const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
@@ -61,3 +61,5 @@ export default async function handler(req, res) {
 
     res.status(200).send('OK');
 }
+
+module.exports = { handler };

@@ -1,15 +1,17 @@
 ﻿import dotenv from 'dotenv';
 import express from 'express';
-import ordersUpdate from './api/orders-update.js'; // note the `.js` extension
 
 dotenv.config();
+
+
+const ordersUpdate = require('./api/orders-update');
 
 const app = express();
 const port = process.env.PORT || 3002;
 
 app.use(express.json()); // parse JSON bodies automatically
 
-app.post('/webhooks/orders-update', (req, res) => {
+app.post('/webhooks/orders-update', express.json(), (req, res) => {
     ordersUpdate.handler(req, res);
 });
 
