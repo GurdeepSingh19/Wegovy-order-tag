@@ -7,7 +7,11 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3002;
 
-app.post('/api/orders-update', express.raw({ type: 'application/json' }), ordersUpdate);
+app.use(express.json()); // parse JSON bodies automatically
+
+app.post('/webhooks/orders-update', (req, res) => {
+    ordersUpdate.handler(req, res);
+});
 
 app.listen(port, () => {
     console.log(`🚀 Server running on port ${port}`);
