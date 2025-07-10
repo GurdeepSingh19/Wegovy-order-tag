@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const PRODUCT_SKU_TO_CHECK = '9000000';
 const TAG_TO_ADD = 'prescription-required';
-const DELAY_MINUTES_ON_CREATE = 1;
+const DELAY_MINUTES_ON_CREATE = 0;
 
 function verifyHmac(req, body, secret) {
     const hmacHeader = req.headers['x-shopify-hmac-sha256'];
@@ -63,57 +63,63 @@ async function addTagIfNeeded(order, shop, accessToken) {
 }
 
 export default async function handler(req, res) {
-    console.log('📩 Webhook received');
-
-    if (req.method !== 'POST') {
-        console.log(`⚠️ Method not allowed: ${req.method}`);
-        return res.status(405).end('Method Not Allowed');
-    }
-
-    let body = '';
     try {
-        body = await new Promise((resolve, reject) => {
-            let data = '';
-            req.on('data', chunk => data += chunk);
-            req.on('end', () => resolve(data));
-            req.on('error', err => {
-                console.error('❌ Error receiving request body:', err);
-                reject(err);
+        console.log('🔥 Webhook handler called');
+
+        if (req.method !== 'POST') {
+            console.log(`⚠️ Method not allowed: ${req.method}`);
+            return res.status(405).end('Method Not Allowed');
+        }
+
+        let body = '';
+        try {
+            body = await new Promise((resolve, reject) => {
+                let data = '';
+                req.on('data', chunk => data += chunk);
+                req.on('end', () => resolve(data));
+                req.on('error', err => {
+                    console.error('❌ Error receiving request body:', err);
+                    reject(err);
+                });
             });
-        });
-        console.log('📥 Received body:', body);
-    } catch (e) {
-        console.error('❌ Invalid body received:', e);
-        return res.status(400).send('Invalid body');
-    }
+            console.log('📥 Received body:', body);
+        } catch (e) {
+            console.error('❌ Invalid body received:', e);
+            return res.status(400).send('Invalid body');
+        }
 
-    const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
+        const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
 
-    if (process.env.SKIP_HMAC_CHECK === 'true') {
-        console.log('⚠️ Skipping HMAC check for testing');
-    } else if (!verifyHmac(req, body, SHOPIFY_SHARED_SECRET)) {
-        console.log('❌ Unauthorized webhook call due to invalid HMAC.');
-        return res.status(401).send('Unauthorized');
-    }
+        if (process.env.SKIP_HMAC_CHECK === 'true') {
+            console.log('⚠️ Skipping HMAC check for testing');
+        } else if (!verifyHmac(req, body, SHOPIFY_SHARED_SECRET)) {
+            console.log('❌ Unauthorized webhook call due to invalid HMAC.');
+            return res.status(401).send('Unauthorized');
+        }
 
-    console.log('🚀 Webhook verified and processing order update');
+        console.log('🚀 Webhook verified and processing order update');
 
-    let order;
-    try {
-        order = JSON.parse(body);
-        console.log(`🆔 Order parsed successfully: ID ${order.id}`);
+        let order;
+        try {
+            order = JSON.parse(body);
+            console.log(`🆔 Order parsed successfully: ID ${order.id}`);
+        } catch (err) {
+            console.error('❌ Failed to parse JSON body:', err);
+            return res.status(400).send('Invalid JSON');
+        }
+
+        try {
+            await delay(DELAY_MINUTES_ON_CREATE * 60 * 1000);
+            await addTagIfNeeded(order, SHOPIFY_SHOP, SHOPIFY_ACCESS_TOKEN);
+            console.log(`✅ Order ${order.id} processing complete.`);
+            res.status(200).send('OK');
+        } catch (err) {
+            console.error('❌ Error processing order:', err);
+            res.status(500).send('Internal Server Error');
+        }
+
     } catch (err) {
-        console.error('❌ Failed to parse JSON body:', err);
-        return res.status(400).send('Invalid JSON');
-    }
-
-    try {
-        await delay(DELAY_MINUTES_ON_CREATE * 60 * 1000);
-        await addTagIfNeeded(order, SHOPIFY_SHOP, SHOPIFY_ACCESS_TOKEN);
-        console.log(`✅ Order ${order.id} processing complete.`);
-        res.status(200).send('OK');
-    } catch (err) {
-        console.error('❌ Error processing order:', err);
+        console.error('❌ Unexpected error:', err);
         res.status(500).send('Internal Server Error');
     }
 }
