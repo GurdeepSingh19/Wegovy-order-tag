@@ -1,6 +1,8 @@
-﻿require('dotenv').config();
-const express = require('express');
-const ordersUpdate = require('./api/orders-update');
+﻿import dotenv from 'dotenv';
+import express from 'express';
+import ordersUpdate from './api/orders-update.js'; // note the `.js` extension
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3002;

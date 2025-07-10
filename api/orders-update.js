@@ -1,5 +1,5 @@
-﻿const crypto = require('crypto');
-const axios = require('axios');
+﻿import crypto from 'crypto';
+import axios from 'axios';
 
 const PRODUCT_SKU_TO_CHECK = '9000000';
 const TAG_TO_ADD = 'prescription-required';
@@ -9,6 +9,15 @@ function verifyHmac(req, body, secret) {
     const hmacHeader = req.headers['x-shopify-hmac-sha256'];
     const hash = crypto.createHmac('sha256', secret).update(body).digest('base64');
     return crypto.timingSafeEqual(Buffer.from(hmacHeader || '', 'base64'), Buffer.from(hash));
+}
+
+function readBody(req) {
+    return new Promise((resolve, reject) => {
+        let data = '';
+        req.on('data', chunk => data += chunk);
+        req.on('end', () => resolve(data));
+        req.on('error', reject);
+    });
 }
 
 async function delay(ms) {
@@ -33,7 +42,7 @@ async function addTagIfNeeded(order, shop, accessToken) {
     });
 }
 
-async function handler(req, res) {
+export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
     const body = await readBody(req);
@@ -50,14 +59,3 @@ async function handler(req, res) {
 
     res.status(200).send('OK');
 }
-
-function readBody(req) {
-    return new Promise((resolve, reject) => {
-        let data = '';
-        req.on('data', chunk => data += chunk);
-        req.on('end', () => resolve(data));
-        req.on('error', reject);
-    });
-}
-
-module.exports = handler;
