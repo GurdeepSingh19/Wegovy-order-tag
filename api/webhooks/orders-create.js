@@ -61,5 +61,3 @@ async function readBody(req) {
     req.on('error', reject);
   });
 }
-
-module.exports = handler;
