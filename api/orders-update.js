@@ -73,8 +73,6 @@ export default async function handler(req, res) {
         } else {
             console.log(` Method allowed: ${req.method}`);
         
-
-            let body = '';
             console.log('📥 Receiving request body...');
             const body = await getRawBody(req);
             console.log('📥 Raw webhook body:', body.toString());
