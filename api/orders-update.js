@@ -1,5 +1,6 @@
 ﻿import crypto from 'crypto';
 import axios from 'axios';
+import getRawBody from 'raw-body';
 
 const PRODUCT_SKU_TO_CHECK = '9000000';
 const TAG_TO_ADD = 'prescription-required';
@@ -75,22 +76,8 @@ export default async function handler(req, res) {
 
             let body = '';
             console.log('📥 Receiving request body...');
-            try {
-                console.log('📥 Reading raw body data...');
-            body = await new Promise((resolve, reject) => {
-                let data = '';
-                req.on('data', chunk => data += chunk);
-                req.on('end', () => resolve(data));
-                req.on('error', err => {
-                    console.error('❌ Error receiving request body:', err);
-                    reject(err);
-                });
-            });
-            console.log('📥 Received body:', body);
-        } catch (e) {
-            console.error('❌ Invalid body received:', e);
-            return res.status(400).send('Invalid body');
-        }
+            const body = await getRawBody(req);
+            console.log('📥 Raw webhook body:', body.toString());
 
         const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
 
