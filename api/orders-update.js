@@ -73,8 +73,10 @@ export default async function handler(req, res) {
             console.log(` Method allowed: ${req.method}`);
         
 
-        let body = '';
-        try {
+            let body = '';
+            console.log('📥 Receiving request body...');
+            try {
+                console.log('📥 Reading raw body data...');
             body = await new Promise((resolve, reject) => {
                 let data = '';
                 req.on('data', chunk => data += chunk);
