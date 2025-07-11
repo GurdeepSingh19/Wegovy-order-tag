@@ -26,6 +26,7 @@ async function delay(ms) {
 async function addTagIfNeeded(order, shop, accessToken) {
     try {
         console.log(`🔍 Checking order ${order.id} for SKU ${PRODUCT_SKU_TO_CHECK}`);
+
         const hasSku = order.line_items?.some(item => item.sku === PRODUCT_SKU_TO_CHECK);
         if (!hasSku) {
             console.log(`❌ SKU ${PRODUCT_SKU_TO_CHECK} not found in order ${order.id}. No tag added.`);
@@ -43,7 +44,6 @@ async function addTagIfNeeded(order, shop, accessToken) {
         console.log(`➕ Adding tag "${TAG_TO_ADD}" to order ${order.id}`);
 
         const newTags = [...currentTags, TAG_TO_ADD];
-
         const url = `https://${shop}/admin/api/2025-07/orders/${order.id}.json`;
         console.log(`🔗 Sending PUT request to Shopify API: ${url}`);
 
@@ -72,42 +72,42 @@ export default async function handler(req, res) {
             return res.status(405).end('Method Not Allowed');
         } else {
             console.log(` Method allowed: ${req.method}`);
-        
-            console.log('📥 Receiving request body...');
+
+            console.log('📥 Receiving raw request body...');
             const body = await getRawBody(req);
-            console.log('📥 Raw webhook body:', body.toString());
+            console.log('📥 Raw webhook body received');
 
-        const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
+            const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
+            console.log('🛠️ Env vars loaded:', {
+                SHOPIFY_SHARED_SECRET: !!SHOPIFY_SHARED_SECRET,
+                SHOPIFY_ACCESS_TOKEN: !!SHOPIFY_ACCESS_TOKEN,
+                SHOPIFY_SHOP
+            });
 
-        if (process.env.SKIP_HMAC_CHECK === 'true') {
-            console.log('⚠️ Skipping HMAC check for testing');
-        } else if (!verifyHmac(req, body, SHOPIFY_SHARED_SECRET)) {
-            console.log('❌ Unauthorized webhook call due to invalid HMAC.');
-            return res.status(401).send('Unauthorized');
-        }
+            if (process.env.SKIP_HMAC_CHECK === 'true') {
+                console.log('⚠️ Skipping HMAC check for testing');
+            } else if (!verifyHmac(req, body, SHOPIFY_SHARED_SECRET)) {
+                console.log('❌ Unauthorized webhook call due to invalid HMAC.');
+                return res.status(401).send('Unauthorized');
+            }
 
-        console.log('🚀 Webhook verified and processing order update');
+            console.log('🚀 Webhook verified and processing order update');
 
-        let order;
-        try {
-            order = JSON.parse(body);
-            console.log(`🆔 Order parsed successfully: ID ${order.id}`);
-        } catch (err) {
-            console.error('❌ Failed to parse JSON body:', err);
-            return res.status(400).send('Invalid JSON');
-        }
+            let order;
+            try {
+                order = JSON.parse(body.toString('utf8'));
+                console.log(`🆔 Order parsed successfully: ID ${order.id}`);
+            } catch (err) {
+                console.error('❌ Failed to parse JSON body:', err);
+                return res.status(400).send('Invalid JSON');
+            }
 
-        try {
             await delay(DELAY_MINUTES_ON_CREATE * 60 * 1000);
             await addTagIfNeeded(order, SHOPIFY_SHOP, SHOPIFY_ACCESS_TOKEN);
+
             console.log(`✅ Order ${order.id} processing complete.`);
             res.status(200).send('OK');
-        } catch (err) {
-            console.error('❌ Error processing order:', err);
-            res.status(500).send('Internal Server Error');
-            }
         }
-
     } catch (err) {
         console.error('❌ Unexpected error:', err);
         res.status(500).send('Internal Server Error');
