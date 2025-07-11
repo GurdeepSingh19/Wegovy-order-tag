@@ -69,7 +69,9 @@ export default async function handler(req, res) {
         if (req.method !== 'POST') {
             console.log(`⚠️ Method not allowed: ${req.method}`);
             return res.status(405).end('Method Not Allowed');
-        }
+        } else {
+            console.log(` Method allowed: ${req.method}`);
+        
 
         let body = '';
         try {
@@ -116,6 +118,7 @@ export default async function handler(req, res) {
         } catch (err) {
             console.error('❌ Error processing order:', err);
             res.status(500).send('Internal Server Error');
+            }
         }
 
     } catch (err) {
