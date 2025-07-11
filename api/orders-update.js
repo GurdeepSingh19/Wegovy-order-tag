@@ -8,8 +8,21 @@ const DELAY_MINUTES_ON_CREATE = 0;
 
 function verifyHmac(req, body, secret) {
     const hmacHeader = req.headers['x-shopify-hmac-sha256'];
+    if (!hmacHeader) {
+        console.log('❌ Missing HMAC header.');
+        return false;
+    }
     const hash = crypto.createHmac('sha256', secret).update(body).digest('base64');
-    const valid = crypto.timingSafeEqual(Buffer.from(hmacHeader || '', 'base64'), Buffer.from(hash));
+
+    const bufferHeader = Buffer.from(hmacHeader, 'base64');
+    const bufferHash = Buffer.from(hash, 'base64');
+
+    if (bufferHeader.length !== bufferHash.length) {
+        console.log(`❌ HMAC length mismatch. Header length: ${bufferHeader.length}, Computed length: ${bufferHash.length}`);
+        return false;
+    }
+
+    const valid = crypto.timingSafeEqual(bufferHeader, bufferHash);
     if (!valid) {
         console.log('❌ HMAC verification failed. Invalid signature.');
     } else {
@@ -17,6 +30,7 @@ function verifyHmac(req, body, secret) {
     }
     return valid;
 }
+
 
 async function delay(ms) {
     console.log(`⏳ Delaying processing for ${ms} ms`);
