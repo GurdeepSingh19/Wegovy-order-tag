@@ -74,7 +74,8 @@ export default async function handler(req, res) {
             console.log(` Method allowed: ${req.method}`);
 
             console.log('📥 Receiving raw request body...');
-            const body = await getRawBody(req);
+            // Use req.body directly - it's already a Buffer from express.raw()
+            const body = req.body;
             console.log('📥 Raw webhook body received');
 
             const { SHOPIFY_SHARED_SECRET, SHOPIFY_ACCESS_TOKEN, SHOPIFY_SHOP } = process.env;
